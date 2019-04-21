@@ -1,0 +1,22 @@
+sudo: required
+services:
+  -docker
+
+before_install:
+  - docker build -t vince15dk/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run vince15dk/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t vince15dk/multi-client ./client
+  - docker build -t vince15dk/multi-nginx ./nginx
+  - docker build -t vince15dk/multi-server ./server
+  - docker build -t vince15dk/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push vince15dk/multi-client
+  - docker push vince15dk/multi-nginx
+  - docker push vince15dk/multi-server
+  - docker push vince15dk/multi-worker
